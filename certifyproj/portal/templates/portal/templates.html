@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+{% block page_title %}Templates{% endblock %}
+{% block content %}
+
+<div class="d-flex flex-wrap gap-2 align-items-center mb-3">
+  <form class="d-flex" method="get">
+    <input class="form-control me-2" name="q" value="{{ q }}" placeholder="Search by name/course">
+    <button class="btn btn-outline-primary">Search</button>
+  </form>
+  <form class="ms-auto" method="post" action="{% url 'portal:templates_import' %}" enctype="multipart/form-data">
+    {% csrf_token %}
+    <input type="file" name="file" accept=".csv" class="form-control d-inline-block" style="width:250px" required>
+    <button class="btn btn-secondary">Import CSV</button>
+    <a class="btn btn-outline-secondary" href="{% url 'portal:templates_export' %}">Export CSV</a>
+  </form>
+
+  <!-- 🔽 Trigger button for modal -->
+  <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addTemplateModal">
+    <i class="bi bi-plus"></i> Add Template
+  </button>
+</div>
+
+
+<!-- ===== Bootstrap Modal for Adding Template ===== -->
+<div class="modal fade" id="addTemplateModal" tabindex="-1" aria-labelledby="addTemplateModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <form method="post" action="{% url 'portal:template_add' %}" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="modal-header">
+          <h5 class="modal-title" id="addTemplateModalLabel">Add Template</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          {{ form.as_p }}
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-success">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+<!-- ============================================= -->
+
+<div class="table-responsive">
+<table class="table table-striped align-middle">
+  <thead>
+    <tr><th>S.No</th><th>Template Name</th><th>Course</th><th>Type</th><th>File</th><th>Actions</th></tr>
+  </thead>
+  <tbody>
+  {% for t in page_obj.object_list %}
+    <tr>
+      <td>{{ t.sno }}</td>
+      <td>{{ t.name }}</td>
+      <td>{{ t.course }}</td>
+      <td class="text-capitalize">{{ t.template_type }}</td>
+      <td>{% if t.file %}<a target="_blank" href="{{ t.file.url }}">View</a>{% else %}-{% endif %}</td>
+      <td class="d-flex gap-2">
+        <a class="btn btn-sm btn-outline-primary" href="{% url 'portal:template_edit' t.sno %}">Edit</a>
+        <a class="btn btn-sm btn-outline-danger" href="{% url 'portal:template_delete' t.sno %}" onclick="return confirm('Delete?')">Delete</a>
+      </td>
+    </tr>
+  {% empty %}
+    <tr><td colspan="6" class="text-center text-muted">No templates yet.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+
+<nav>
+  <ul class="pagination">
+    {% if page_obj.has_previous %}
+    <li class="page-item"><a class="page-link" href="?q={{ q }}&page={{ page_obj.previous_page_number }}">Prev</a></li>
+    {% else %}<li class="page-item disabled"><span class="page-link">Prev</span></li>{% endif %}
+    <li class="page-item disabled"><span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span></li>
+    {% if page_obj.has_next %}
+    <li class="page-item"><a class="page-link" href="?q={{ q }}&page={{ page_obj.next_page_number }}">Next</a></li>
+    {% else %}<li class="page-item disabled"><span class="page-link">Next</span></li>{% endif %}
+  </ul>
+</nav>
+
+{% endblock %}

@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+{% block page_title %}Reports{% endblock %}
+{% block content %}
+<form class="d-flex mb-3">
+  <input class="form-control me-2" name="q" placeholder="Search email/name/number" value="{{ q }}">
+  <button class="btn btn-outline-primary">Search</button>
+</form>
+
+<h5 class="mb-2">Successfully Sent</h5>
+<div class="table-responsive">
+<table class="table table-striped align-middle">
+  <thead><tr>
+    <th>When</th><th>Student</th><th>Email</th><th>Actions</th><th>Resent</th><th>Downloaded</th>
+  </tr></thead>
+  <tbody>
+  {% for l in succ_page.object_list %}
+    <tr>
+      <td>{{ l.sent_at|date:"d-m-Y H:i" }}</td>
+      <td>{{ l.student.name }} ({{ l.student.hallticket }})</td>
+      <td>{{ l.recipient_email }}</td>
+      <td class="d-flex gap-2">
+        <a class="btn btn-sm btn-outline-primary" href="{% url 'portal:log_resend' l.id %}">Resend</a>
+        <a class="btn btn-sm btn-outline-secondary" href="{% url 'portal:log_download' l.id %}">Download</a>
+      </td>
+      <td>{{ l.resend_count }}</td>
+      <td>{{ l.download_count }}</td>
+    </tr>
+  {% empty %}
+    <tr><td colspan="6" class="text-muted text-center">No success logs yet.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+<nav class="mb-4">
+  <ul class="pagination">
+    {% if succ_page.has_previous %}
+      <li class="page-item"><a class="page-link" href="?q={{ q }}&succ_page={{ succ_page.previous_page_number }}&err_page={{ err_page.number }}">Prev</a></li>
+    {% else %}<li class="page-item disabled"><span class="page-link">Prev</span></li>{% endif %}
+    <li class="page-item disabled"><span class="page-link">Page {{ succ_page.number }}</span></li>
+    {% if succ_page.has_next %}
+      <li class="page-item"><a class="page-link" href="?q={{ q }}&succ_page={{ succ_page.next_page_number }}&err_page={{ err_page.number }}">Next</a></li>
+    {% else %}<li class="page-item disabled"><span class="page-link">Next</span></li>{% endif %}
+  </ul>
+</nav>
+
+<h5 class="mb-2">Errors / Unsent</h5>
+<div class="table-responsive">
+<table class="table table-striped align-middle">
+  <thead><tr>
+    <th>When</th><th>Student</th><th>Email</th><th>Error Reason</th><th>Actions</th><th>Resent</th><th>Downloaded</th>
+  </tr></thead>
+  <tbody>
+  {% for l in err_page.object_list %}
+    <tr>
+      <td>{{ l.sent_at|date:"d-m-Y H:i" }}</td>
+      <td>{% if l.student %}{{ l.student.name }} ({{ l.student.hallticket }}){% else %}-{% endif %}</td>
+      <td>{{ l.recipient_email }}</td>
+      <td class="text-danger">{{ l.error_reason }}</td>
+      <td class="d-flex gap-2">
+        <a class="btn btn-sm btn-outline-primary" href="{% url 'portal:log_resend' l.id %}">Resend</a>
+        {% if l.attachment %}
+        <a class="btn btn-sm btn-outline-secondary" href="{% url 'portal:log_download' l.id %}">Download</a>
+        {% else %}
+        <button class="btn btn-sm btn-outline-secondary" disabled>Download</button>
+        {% endif %}
+      </td>
+      <td>{{ l.resend_count }}</td>
+      <td>{{ l.download_count }}</td>
+    </tr>
+  {% empty %}
+    <tr><td colspan="7" class="text-muted text-center">No error logs 🎉</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+
+{% for m in messages %}
+<div class="alert alert-info mt-3">{{ m }}</div>
+{% endfor %}
+{% endblock %}
